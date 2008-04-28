@@ -9,11 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.1.0
+Version 0.2.0
 
 =cut
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 
 =head1 SYNOPSIS
@@ -53,223 +53,6 @@ sub new {
 	bless $self;
 	return $self;
 }
-
-=head2 parse
-
-This parses a string in the ZML format. The only variable it requires is the
-string that contains the data.
-
-=cut
-
-sub parse {
-	my ($self, $zmlstring)= @_;
-	my %zml=();
-	
-	#breaks down the zblstring per line
-	my @rawdata=split(/\n/, $zmlstring);
-
-	#blanks any errors
-	$self->errorBlank;
-
-	my $rawdataInt=0;
-	my $prevVar=undef;
-	#performs the initial parsing
-	while(defined($rawdata[$rawdataInt])){
-		if($rawdata[$rawdataInt] =~ /^ /){
-			#this if statement prevents it from being ran on the first line if it is not properly formated
-			if(!defined($prevVar)){
-				chomp($rawdata[$rawdataInt]);
-				$rawdata[$rawdataInt]=~s/^ //;#remove the trailing space
-				#add in the line return and 
-				$zml{$prevVar}=$zml{$prevVar}."\n".$rawdata[$rawdataInt];
-			};
-		}else{
-			#split it into two
-			my @linesplit=split(/=/, $rawdata[$rawdataInt], 2);
-			chomp($linesplit[1]);
-			$zml{$linesplit[0]}=$linesplit[1];
-			$prevVar=$linesplit[0];#this is used if the next line is a continuation from the previous
-		};
-
-		$rawdataInt++;
-	};
-
-	#breaks it down
-	my @keys=keys(%zml);
-	my $keysInt=0;
-	while(defined($keys[$keysInt])){
-		#used for checking if it a match has been found
-		my $matched=undef;
-
-		#if it does not begin with a # it is a variable
-		if(!$keys[$keysInt] =~ /^#/){
-			#signify it has been matched
-			$matched=1;
-			
-			#check if the variable name is legit
-			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
-			if(!$legit){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-
-			$self->{var}{$keys[$keysInt]}=$zml{$keys[$keysInt]};
-		};
-
-		#if it does begin with a ## it is a comment
-		if($keys[$keysInt] =~ /^##/){
-			#signify it has been matched
-			$matched=1;
-			
-			#removes the ## from the beginning of the variable
-			$keys[$keysInt]=~s/^##//;
-
-			#check if the variable name is legit
-			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
-			if(!$legit){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-
-			#splits the comment
-			my @commentsplit=split(/=/, $zml{$keys[$keysInt]}, 2);
-
-			#check if the comment variable name is legit
-			($legit, $errorString)=varNameCheck($commentsplit[0]);
-			if(!$legit){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-			
-			if(defined($self->{comment}{$keys[$keysInt]})){
-				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
-			}else{
-				$self->{comment}{$keys[$keysInt]}={};
-				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
-			};
-		};
-
-		#if it does begin with a ## it is a comment
-		if($keys[$keysInt] =~ /^#!/){
-			#signify it has been matched
-			$matched=1;
-			
-			#removes the ## from the beginning of the variable
-			$keys[$keysInt]=~s/^#!//;
-
-			#check if the variable name is legit
-			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
-			if(!$legit){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-			
-						#splits the meta
-			my @metasplit=split(/=/, $zml{$keys[$keysInt]}, 2);
-
-			#check if the comment variable name is legit
-			($legit, $errorString)=varNameCheck($metasplit[0]);
-			if(!$legit){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-			
-			if(defined($self->{meta}{$keys[$keysInt]})){
-				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
-			}else{
-				$self->{meta}{$keys[$keysInt]}={};
-				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
-			};
-		};
-		
-		if(!$matched){
-			$self->{error}="9";
-			$self->{errorString}="The variable begins with a # and is not a comment or meta variable.";
-			return undef;
-		};
-
-		$keysInt++;
-	};
-
-	return 1;
-}
-
-=head2 varNameCheck
-
-This checks a variable name to see if it is legit. It requires
-one variable, which the name of the variable. It returns two
-values.
-
-The first is a integer which represents the of the error. If
-it is undefined, there is no error.
-
-The second return is the string that describes the error.
-
-	my ($legit, $errorString)=varNameCheck($name);
-
-=cut
-
-#checks the config name
-sub varNameCheck{
-	my ($self, $name) = @_;
-		
-	#checks for ,
-	if($name =~ /,/){
-		return("0", "variavble name,'".$name."', contains ','");
-	};
-		
-	#checks for /.
-	if($name =~ /\/\./){
-		return("1", "variavble name,'".$name."', contains '/.'");
-	};
-
-	#checks for //
-	if($name =~ /\/\//){
-		return("2", "variavble name,'".$name."', contains '//'");
-	};
-
-	#checks for ../
-	if($name =~ /\.\.\//){
-		return("3", "variavble name,'".$name."', contains '../'");
-	};
-
-	#checks for /..
-	if($name =~ /\/\.\./){
-		return("4", "variavble name,'".$name."', contains '/..'");
-	};
-
-	#checks for ^./
-	if($name =~ /^\.\//){
-		return("5", "variavble name,'".$name."', matched /^\.\//");
-	};
-
-	#checks for /$
-	if($name =~ /\/$/){
-		return("6", "variavble name,'".$name."', matched /\/$/");
-	};
-
-	#checks for ^/
-	if($name =~ /^\//){
-		return("7", "variavble name,'".$name."', matched /^\//");
-	};
-
-	#checks for \\n
-	if($name =~ /\n/){
-		return("8", "variavble name,'".$name."', matched /\\n/");
-	};
-
-	#checks for 
-	if($name =~ /=/){
-		return("9", "variavble name,'".$name."', matched /=/");
-	};
-
-	return(undef, ""); 
-};
 
 =head2 addVar 
 
@@ -405,6 +188,66 @@ sub addMeta{
 	return 1;
 };
 
+=head2 clearComment 
+
+This removes a meta variable. Two values are required.
+
+The first is the variable name.
+
+	$ZMLobject->clearComment("some/variable");
+	
+=cut 
+
+sub clearComment{
+	my $self=$_[0];
+	my $var=$_[1];
+
+
+	$self->errorBlank;
+
+	#check if the variable name is legit
+	my ($legit, $errorString)=varNameCheck($var);
+	if(!$legit){
+		$self->{error}=$legit;
+		$self->{errorString}=$errorString;
+		return undef;
+	};
+
+	delete($self->{comment}{$var});
+
+	return 1;
+};
+
+=head2 clearMeta
+
+This removes a meta. Two values are required.
+
+The first is the meta.
+
+	$ZMLobject->clearMeta("some/variable");
+	
+=cut 
+
+sub clearMeta{
+	my $self=$_[0];
+	my $var=$_[1];
+
+
+	$self->errorBlank;
+
+	#check if the variable name is legit
+	my ($legit, $errorString)=varNameCheck($var);
+	if(!$legit){
+		$self->{error}=$legit;
+		$self->{errorString}=$errorString;
+		return undef;
+	};
+
+	delete($self->{meta}{$var});
+
+	return 1;
+};
+
 =head2 delVar 
 
 This removes a variable. The only variable required is the
@@ -509,66 +352,6 @@ sub delComment{
 	}
 
 	delete($self->{comment}{$var}{$comment});
-
-	return 1;
-};
-
-=head2 clearComment 
-
-This removes a meta variable. Two values are required.
-
-The first is the variable name.
-
-	$ZMLobject->clearComment("some/variable");
-	
-=cut 
-
-sub clearComment{
-	my $self=$_[0];
-	my $var=$_[1];
-
-
-	$self->errorBlank;
-
-	#check if the variable name is legit
-	my ($legit, $errorString)=varNameCheck($var);
-	if(!$legit){
-		$self->{error}=$legit;
-		$self->{errorString}=$errorString;
-		return undef;
-	};
-
-	delete($self->{comment}{$var});
-
-	return 1;
-};
-
-=head2 clearMeta
-
-This removes a meta. Two values are required.
-
-The first is the meta.
-
-	$ZMLobject->clearMeta("some/variable");
-	
-=cut 
-
-sub clearMeta{
-	my $self=$_[0];
-	my $var=$_[1];
-
-
-	$self->errorBlank;
-
-	#check if the variable name is legit
-	my ($legit, $errorString)=varNameCheck($var);
-	if(!$legit){
-		$self->{error}=$legit;
-		$self->{errorString}=$errorString;
-		return undef;
-	};
-
-	delete($self->{meta}{$var});
 
 	return 1;
 };
@@ -799,6 +582,339 @@ sub keysCommentVar {
 	return @keys;
 };
 
+=head2 keyRegexDelComment
+
+This searches a the comments for a match and removes it.
+
+It requires two arguements. The first arguement is the regexp used
+to match the variable. The second is a regexp to match a name.
+
+	#checks every meta for any meta variable matching /^monkey/
+	my %removed=keyRegexDelComment("", "^monkey")
+
+	#prints the removed
+	my @removedA=keys(%removed)
+	my $removedInt=0;
+	while(defined($removedA[$removedInt])){
+		my $mvInt=0;
+		while(defined($removed{$removedA[$removedInt]})){
+			print $removed{$removedA[$removedInt]}[$mvInt]."\n";
+			
+			$mvInt++;
+		};
+		
+		$removedInt++;
+	};
+
+=cut
+
+sub keyRegexDelComment{
+	my ($self, $creg, $vreg) = @_;
+	
+	#contains the removed variables
+	my %removed;
+	
+	#get a list of variables
+	my @ckeys=keys(%{$self->{comment}});
+	
+	my $ckeysInt=0;
+	#goes through looking for matching metas
+	while(defined($ckeys[$ckeysInt])){
+		#check if the key matches
+		if($ckeys[$ckeysInt] =~ /$creg/){
+			my @vkeys=keys(%{$self->{comment}{$ckeys[$ckeysInt]}});
+			my $vkeysInt=0;
+			#goes through checking the meta variables
+			while(defined($vkeys[$vkeysInt])){
+				#removes it if it matches
+				if($self->{comment}{$ckeys[$ckeysInt]}{$vkeys[$vkeysInt]}){
+					#adds is to the list of removed variables
+					if(!defined($removed{$ckeys[$ckeysInt]})){
+						#adds it to the removed list if the key for the meta has not been added yet
+						$removed{$ckeys[$ckeysInt]}=[$vkeys[$vkeysInt]];
+					}else{
+						#adds it if it has not been added yet
+						push(@{$removed{$ckeys[$ckeysInt]}}, $vkeys[$vkeysInt]);
+					};
+
+		 			delete($self->{comment}{$ckeys[$ckeysInt]}{$vkeys[$vkeysInt]});
+				};
+
+				#checks all the meta variables have been removes it if it matched
+				@vkeys=keys(%{$self->{comment}{$ckeys[$ckeysInt]}});
+				if(defined($vkeys[0])){
+					delete($self->{comment}{$ckeys[$ckeysInt]});
+				};
+
+				$vkeysInt++;
+			};
+		};
+
+		$ckeysInt++;
+	};
+
+	return %removed;
+};
+
+=head2 keyRegexDelMeta
+
+This searches a the metas for a match and removes it.
+
+It requires two arguements. The first arguement is the regexp used
+to match the meta. The second is the regexp used to match the meta
+variable.
+
+	#checks every meta for any meta variable matching /^monkey/
+	my %removed=keyRegexDelMeta("", "^monkey")
+
+	#prints the removed
+	my @removedA=keys(%removed)
+	my $removedInt=0;
+	while(defined($removedA[$removedInt])){
+		my $mvInt=0;
+		while(defined($removed{$removedA[$removedInt]})){
+			print $removed{$removedA[$removedInt]}[$mvInt]."\n";
+			
+			$mvInt++;
+		};
+		
+		$removedInt++;
+	};
+
+=cut
+
+sub keyRegexDelMeta{
+	my ($self, $mreg, $vreg) = @_;
+	
+	#contains the removed variables
+	my %removed;
+	
+	#get a list of variables
+	my @mkeys=keys(%{$self->{meta}});
+	
+	my $mkeysInt=0;
+	#goes through looking for matching metas
+	while(defined($mkeys[$mkeysInt])){
+		#check if the key matches
+		if($mkeys[$mkeysInt] =~ /$mreg/){
+			my @vkeys=keys(%{$self->{meta}{$mkeys[$mkeysInt]}});
+			my $vkeysInt=0;
+			#goes through checking the meta variables
+			while(defined($vkeys[$vkeysInt])){
+				#removes it if it matches
+				if($self->{meta}{$mkeys[$mkeysInt]}{$vkeys[$vkeysInt]}){
+					#adds is to the list of removed variables
+					if(!defined($removed{$mkeys[$mkeysInt]})){
+						#adds it to the removed list if the key for the meta has not been added yet
+						$removed{$mkeys[$mkeysInt]}=[$vkeys[$vkeysInt]];
+					}else{
+						#adds it if it has not been added yet
+						push(@{$removed{$mkeys[$mkeysInt]}}, $vkeys[$vkeysInt]);
+					};
+					
+		 			delete($self->{meta}{$mkeys[$mkeysInt]}{$vkeys[$vkeysInt]});
+				};
+				
+				#checks all the meta variables have been removes it if it matched
+				@vkeys=keys(%{$self->{meta}{$mkeys[$mkeysInt]}});
+				if(defined($vkeys[0])){
+					delete($self->{meta}{$mkeys[$mkeysInt]});
+				};
+				
+				$vkeysInt++;
+			};
+		};
+
+		$mkeysInt++;
+	};
+
+	return %removed;
+};
+
+=head2 keyRegexDelVar
+
+This searches a the variables for a match and removes it.
+
+It requires one arguement, which is the regex to use.
+
+It returns a array of removed variables.
+
+	#remove any variables starting with the word monkey
+	my @removed=keyRegexDelVar("^monkey")
+
+=cut
+
+sub keyRegexDelVar{
+	my ($self, $regex) = @_;
+	
+	#contains the removed variables
+	my @removed=();
+	
+	#get a list of variables
+	my @keys=keys(%{$self->{var}});
+	
+	my $keysInt=0;
+	while(defined($keys[$keysInt])){
+		#check if the key matches
+		if($keys[$keysInt] =~ /$regex/){
+			#add the key to the array of removed variables
+			push(@keys, $keys[$keysInt]);
+			
+			#removes the variable
+			delete($self->{var}{$keys[$keysInt]});
+		};
+		
+		$keysInt++;
+	};
+	
+	return @removed;
+};
+
+=head2 parse
+
+This parses a string in the ZML format. The only variable it requires is the
+string that contains the data.
+
+=cut
+
+sub parse {
+	my ($self, $zmlstring)= @_;
+	my %zml=();
+	
+	#breaks down the zblstring per line
+	my @rawdata=split(/\n/, $zmlstring);
+
+	#blanks any errors
+	$self->errorBlank;
+
+	my $rawdataInt=0;
+	my $prevVar=undef;
+	#performs the initial parsing
+	while(defined($rawdata[$rawdataInt])){
+		if($rawdata[$rawdataInt] =~ /^ /){
+			#this if statement prevents it from being ran on the first line if it is not properly formated
+			if(!defined($prevVar)){
+				chomp($rawdata[$rawdataInt]);
+				$rawdata[$rawdataInt]=~s/^ //;#remove the trailing space
+				#add in the line return and 
+				$zml{$prevVar}=$zml{$prevVar}."\n".$rawdata[$rawdataInt];
+			};
+		}else{
+			#split it into two
+			my @linesplit=split(/=/, $rawdata[$rawdataInt], 2);
+			chomp($linesplit[1]);
+			$zml{$linesplit[0]}=$linesplit[1];
+			$prevVar=$linesplit[0];#this is used if the next line is a continuation from the previous
+		};
+
+		$rawdataInt++;
+	};
+
+	#breaks it down
+	my @keys=keys(%zml);
+	my $keysInt=0;
+	while(defined($keys[$keysInt])){
+		#used for checking if it a match has been found
+		my $matched=undef;
+
+		#if it does not begin with a # it is a variable
+		if(!$keys[$keysInt] =~ /^#/){
+			#signify it has been matched
+			$matched=1;
+			
+			#check if the variable name is legit
+			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
+			if(!$legit){
+				$self->{error}=$legit;
+				$self->{errorString}=$errorString;
+				return undef;
+			}
+
+			$self->{var}{$keys[$keysInt]}=$zml{$keys[$keysInt]};
+		};
+
+		#if it does begin with a ## it is a comment
+		if($keys[$keysInt] =~ /^##/){
+			#signify it has been matched
+			$matched=1;
+			
+			#removes the ## from the beginning of the variable
+			$keys[$keysInt]=~s/^##//;
+
+			#check if the variable name is legit
+			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
+			if(!$legit){
+				$self->{error}=$legit;
+				$self->{errorString}=$errorString;
+				return undef;
+			}
+
+			#splits the comment
+			my @commentsplit=split(/=/, $zml{$keys[$keysInt]}, 2);
+
+			#check if the comment variable name is legit
+			($legit, $errorString)=varNameCheck($commentsplit[0]);
+			if(!$legit){
+				$self->{error}=$legit;
+				$self->{errorString}=$errorString;
+				return undef;
+			}
+			
+			if(defined($self->{comment}{$keys[$keysInt]})){
+				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
+			}else{
+				$self->{comment}{$keys[$keysInt]}={};
+				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
+			};
+		};
+
+		#if it does begin with a ## it is a comment
+		if($keys[$keysInt] =~ /^#!/){
+			#signify it has been matched
+			$matched=1;
+			
+			#removes the ## from the beginning of the variable
+			$keys[$keysInt]=~s/^#!//;
+
+			#check if the variable name is legit
+			my ($legit, $errorString)=varNameCheck($keys[$keysInt]);
+			if(!$legit){
+				$self->{error}=$legit;
+				$self->{errorString}=$errorString;
+				return undef;
+			}
+			
+						#splits the meta
+			my @metasplit=split(/=/, $zml{$keys[$keysInt]}, 2);
+
+			#check if the comment variable name is legit
+			($legit, $errorString)=varNameCheck($metasplit[0]);
+			if(!$legit){
+				$self->{error}=$legit;
+				$self->{errorString}=$errorString;
+				return undef;
+			}
+			
+			if(defined($self->{meta}{$keys[$keysInt]})){
+				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
+			}else{
+				$self->{meta}{$keys[$keysInt]}={};
+				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
+			};
+		};
+		
+		if(!$matched){
+			$self->{error}="9";
+			$self->{errorString}="The variable begins with a # and is not a comment or meta variable.";
+			return undef;
+		};
+
+		$keysInt++;
+	};
+
+	return 1;
+};
+
 =head2 string
 
 This function creates a string out of a the object.
@@ -861,8 +977,8 @@ sub string{
 		my $keysInt++;
 	};
 
-	#generate the portion of the string for the metas
-	@keys=keys(%{$self->{meta}});
+	#generate the portion of the string for the variables
+	@keys=keys(%{$self->{var}});
 	$keysInt=0;
 	while($keys[$keysInt]){
 		my $var=$keys[$keysInt];
@@ -878,6 +994,258 @@ sub string{
 	};
 
 	return $string;
+};
+
+=head2 valRegexDelComment
+
+This searches the comments for ones that have a value matching the regex.
+
+It requires one arguement, which is the regex to use.
+
+It returns a array of removed variables.
+
+	#removes any variable in which the value matches /^monkey/
+	my %removed=keyRegexDelMeta("^monkey")
+
+	#prints the removed
+	my @removedA=keys(%removed)
+	my $removedInt=0;
+	while(defined($removedA[$removedInt])){
+		my $mvInt=0;
+		while(defined($removed{$removedA[$removedInt]})){
+			print $removed{$removedA[$removedInt]}[$mvInt]."\n";
+			
+			$mvInt++;
+		};
+		
+		$removedInt++;
+	};
+
+=cut
+
+sub valRegexDelComment{
+	my ($self, $regex) = @_;
+	
+	#contains the removed variables
+	my %removed;
+	
+	#get a list of variables
+	my @keys=keys(%{$self->{mar}});
+	
+	my $keysInt=0;
+	while(defined($keys[$keysInt])){
+		my @keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		my $keys2Int=0;
+		while(defined($keys2[$keys2Int])){
+			#tests if the value equals the regexp
+			if($self->{meta}{$keys[$keysInt]}{$keys2[$keys2Int]} =~ /$regex/){
+				#adds is to the list of removed variables
+				if(!defined($removed{$keys2[$keys2Int]})){
+					#adds it to the removed list if the key for the meta has not been added yet
+					$removed{$keys[$keysInt]}=[$keys2[$keys2Int]];
+				}else{
+					#adds it if it has not been added yet
+					push(@{$removed{$keys[$keysInt]}}, $keys2[$keys2Int]);
+				};
+
+				delete($self->{meta}{$keys[$keysInt]}{$keys2[$keys2Int]});
+			};
+
+			$keys2Int++;
+		};
+
+		#checks all the meta variables have been removes it if it matched
+		@keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		if(defined($keys2[0])){
+			delete($self->{meta}{$keys[$keysInt]});
+		};
+		
+		$keysInt++;
+	};
+	
+	return %removed;
+};
+
+
+=head2 valRegexDelMeta
+
+This searches the variables for ones that have a value matching the regex.
+
+It requires one arguement, which is the regex to use.
+
+It returns a array of removed variables.
+
+	#removes any variable in which the value matches /^monkey/
+	my %removed=keyRegexDelMeta("^monkey")
+
+	#prints the removed
+	my @removedA=keys(%removed)
+	my $removedInt=0;
+	while(defined($removedA[$removedInt])){
+		my $mvInt=0;
+		while(defined($removed{$removedA[$removedInt]})){
+			print $removed{$removedA[$removedInt]}[$mvInt]."\n";
+			
+			$mvInt++;
+		};
+		
+		$removedInt++;
+	};
+
+=cut
+
+sub valRegexDelMeta{
+	my ($self, $regex) = @_;
+	
+	#contains the removed variables
+	my %removed;
+	
+	#get a list of variables
+	my @keys=keys(%{$self->{mar}});
+	
+	my $keysInt=0;
+	while(defined($keys[$keysInt])){
+		my @keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		my $keys2Int=0;
+		while(defined($keys2[$keys2Int])){
+			#tests if the value equals the regexp
+			if($self->{meta}{$keys[$keysInt]}{$keys2[$keys2Int]} =~ /$regex/){
+				#adds is to the list of removed variables
+				if(!defined($removed{$keys2[$keys2Int]})){
+					#adds it to the removed list if the key for the meta has not been added yet
+					$removed{$keys[$keysInt]}=[$keys2[$keys2Int]];
+				}else{
+					#adds it if it has not been added yet
+					push(@{$removed{$keys[$keysInt]}}, $keys2[$keys2Int]);
+				};
+
+				delete($self->{meta}{$keys[$keysInt]}{$keys2[$keys2Int]});
+			};
+
+			$keys2Int++;
+		};
+
+		#checks all the meta variables have been removes it if it matched
+		@keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		if(defined($keys2[0])){
+			delete($self->{meta}{$keys[$keysInt]});
+		};
+		
+		$keysInt++;
+	};
+	
+	return %removed;
+};
+
+=head2 valRegexDelVar
+
+This searches the variables for ones that have a value matching the regex.
+
+It requires one arguement, which is the regex to use.
+
+It returns a array of removed variables.
+
+	#remove any variables starting with the word monkey
+	my @removed=valRegexDelVar("^monkey")
+
+=cut
+
+sub valRegexDelVar{
+	my ($self, $regex) = @_;
+	
+	#contains the removed variables
+	my @removed=();
+	
+	#get a list of variables
+	my @keys=keys(%{$self->{var}});
+	
+	my $keysInt=0;
+	while(defined($keys[$keysInt])){
+		#check if the key matches
+		if($self->{var}{$keys[$keysInt]} =~ /$regex/){
+			#add the key to the array of removed variables
+			push(@keys, $keys[$keysInt]);
+			
+			#removes the variable
+			delete($self->{var}{$keys[$keysInt]});
+		};
+		
+		$keysInt++;
+	};
+	
+	return @removed;
+};
+
+=head2 varNameCheck
+
+This checks a variable name to see if it is legit. It requires
+one variable, which the name of the variable. It returns two
+values.
+
+The first is a integer which represents the of the error. If
+it is undefined, there is no error.
+
+The second return is the string that describes the error.
+
+	my ($legit, $errorString)=varNameCheck($name);
+
+=cut
+
+#checks the config name
+sub varNameCheck{
+	my ($self, $name) = @_;
+		
+	#checks for ,
+	if($name =~ /,/){
+		return("0", "variavble name,'".$name."', contains ','");
+	};
+		
+	#checks for /.
+	if($name =~ /\/\./){
+		return("1", "variavble name,'".$name."', contains '/.'");
+	};
+
+	#checks for //
+	if($name =~ /\/\//){
+		return("2", "variavble name,'".$name."', contains '//'");
+	};
+
+	#checks for ../
+	if($name =~ /\.\.\//){
+		return("3", "variavble name,'".$name."', contains '../'");
+	};
+
+	#checks for /..
+	if($name =~ /\/\.\./){
+		return("4", "variavble name,'".$name."', contains '/..'");
+	};
+
+	#checks for ^./
+	if($name =~ /^\.\//){
+		return("5", "variavble name,'".$name."', matched /^\.\//");
+	};
+
+	#checks for /$
+	if($name =~ /\/$/){
+		return("6", "variavble name,'".$name."', matched /\/$/");
+	};
+
+	#checks for ^/
+	if($name =~ /^\//){
+		return("7", "variavble name,'".$name."', matched /^\//");
+	};
+
+	#checks for \\n
+	if($name =~ /\n/){
+		return("8", "variavble name,'".$name."', matched /\\n/");
+	};
+
+	#checks for 
+	if($name =~ /=/){
+		return("9", "variavble name,'".$name."', matched /=/");
+	};
+
+	return(undef, ""); 
 };
 
 =head2 errorBlank 
@@ -921,7 +1289,7 @@ by a "=". Any thing after the second "=" is considered to be part of the  value.
 A line starting with #! indicates it is a comment, as stated above.
 
 It is broken down into three parts, meta, meta variable, and data. Each is sperated
-by a "=". Any thing after the second "=" is considered to be part of the  value.
+by a "=". The first field is the meta. The second is the meta variable. The third is the value.
 
 =head2 variable
 

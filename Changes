@@ -1,5 +1,10 @@
 Revision history for ZML
 
-0.01    Date/time
-        First version, released on an unsuspecting world.
+0.2.0   2008-04-28/04:04
+        Added valRegexDelVar, keyRegexDelComment, keyRegexDelMeta,
+        keyRegexDelVar, valRegexDelComment, valRegexDelMeta, and
+        valRegexDelVar.
+
+0.1.0   2008-04-25/19:30
+        Initial release.
 
