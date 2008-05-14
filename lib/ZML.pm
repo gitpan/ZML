@@ -9,11 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.3.0
+Version 0.4.0
 
 =cut
 
-our $VERSION = '0.3.0';
+our $VERSION = '0.4.0';
 
 
 =head1 SYNOPSIS
@@ -82,7 +82,8 @@ sub addVar{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(defined($legit)){
+
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -117,7 +118,7 @@ sub addComment{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -125,7 +126,7 @@ sub addComment{
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -168,7 +169,7 @@ sub addMeta{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -176,7 +177,7 @@ sub addMeta{
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -214,7 +215,7 @@ sub clearComment{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -244,7 +245,7 @@ sub clearMeta{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -272,7 +273,7 @@ sub delVar{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($legit)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -304,7 +305,7 @@ sub delMeta{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -312,7 +313,7 @@ sub delMeta{
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -344,7 +345,7 @@ sub delComment{
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -352,7 +353,7 @@ sub delComment{
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -378,7 +379,7 @@ sub getVar {
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -408,7 +409,7 @@ sub getMeta {
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -416,7 +417,7 @@ sub getMeta {
 
 	#check if the meta variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -452,7 +453,7 @@ sub getComment {
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -460,7 +461,7 @@ sub getComment {
 
 	#check if the meta variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -551,7 +552,7 @@ sub keysMetaVar {
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -578,7 +579,7 @@ sub keysCommentVar {
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!$legit){
+	if(!defined($var)){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
@@ -831,7 +832,7 @@ sub parse {
 			
 			#check if the variable name is legit
 			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(!$legit){
+			if(!defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -850,7 +851,7 @@ sub parse {
 
 			#check if the variable name is legit
 			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(!$legit){
+			if(!defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -861,7 +862,7 @@ sub parse {
 
 			#check if the comment variable name is legit
 			($legit, $errorString)=$self->varNameCheck($commentsplit[0]);
-			if(!$legit){
+			if(!defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -941,7 +942,7 @@ sub string{
 	#generate the portion of the string for the comments
 	my @keys=keys(%{$self->{comment}});
 	my $keysInt=0;
-	while($keys[$keysInt]){
+	while(defined($keys[$keysInt])){
 		my $comment=$keys[$keysInt];
 		
 		#builds string for
@@ -958,13 +959,13 @@ sub string{
 
 			$commentKeysInt++;
 		};
-		my $keysInt++;
+		$keysInt++;
 	};
 
 	#generate the portion of the string for the metas
 	@keys=keys(%{$self->{meta}});
 	$keysInt=0;
-	while($keys[$keysInt]){
+	while(defined($keys[$keysInt])){
 		my $meta=$keys[$keysInt];
 		
 		#builds string for
@@ -981,13 +982,14 @@ sub string{
 
 			$metaKeysInt++;
 		};
-		my $keysInt++;
+		$keysInt++;
 	};
 
 	#generate the portion of the string for the variables
 	@keys=keys(%{$self->{var}});
 	$keysInt=0;
-	while($keys[$keysInt]){
+
+	while(defined($keys[$keysInt])){
 		my $var=$keys[$keysInt];
 
 		my $data=$self->{var}{$var};
@@ -997,7 +999,7 @@ sub string{
 
 		$string=$string.$var."=".$data."\n";
 
-		my $keysInt++;
+		$keysInt++;
 	};
 
 	return $string;
@@ -1201,7 +1203,7 @@ The second return is the string that describes the error.
 #checks the config name
 sub varNameCheck{
 	my ($self, $name) = @_;
-print "name=".$name."\n";
+
 	#checks for ,
 	if($name =~ /,/){
 		return("0", "variavble name,'".$name."', contains ','");
