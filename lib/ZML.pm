@@ -9,11 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.4.0
+Version 0.5.0
 
 =cut
 
-our $VERSION = '0.4.0';
+our $VERSION = '0.5.0';
 
 
 =head1 SYNOPSIS
@@ -826,13 +826,13 @@ sub parse {
 		my $matched=undef;
 
 		#if it does not begin with a # it is a variable
-		if(!$keys[$keysInt] =~ /^#/){
+		if(!($keys[$keysInt] =~ /^#/)){
 			#signify it has been matched
 			$matched=1;
-			
+
 			#check if the variable name is legit
 			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(!defined($legit)){
+			if(defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -845,13 +845,13 @@ sub parse {
 		if($keys[$keysInt] =~ /^##/){
 			#signify it has been matched
 			$matched=1;
-			
+
 			#removes the ## from the beginning of the variable
 			$keys[$keysInt]=~s/^##//;
 
 			#check if the variable name is legit
 			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(!defined($legit)){
+			if(defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -862,7 +862,7 @@ sub parse {
 
 			#check if the comment variable name is legit
 			($legit, $errorString)=$self->varNameCheck($commentsplit[0]);
-			if(!defined($legit)){
+			if(defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -880,13 +880,13 @@ sub parse {
 		if($keys[$keysInt] =~ /^#!/){
 			#signify it has been matched
 			$matched=1;
-			
+
 			#removes the ## from the beginning of the variable
 			$keys[$keysInt]=~s/^#!//;
 
 			#check if the variable name is legit
 			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(!$legit){
+			if(defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -897,7 +897,7 @@ sub parse {
 
 			#check if the comment variable name is legit
 			($legit, $errorString)=$self->varNameCheck($metasplit[0]);
-			if(!$legit){
+			if(defined($legit)){
 				$self->{error}=$legit;
 				$self->{errorString}=$errorString;
 				return undef;
@@ -910,7 +910,7 @@ sub parse {
 				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
 			};
 		};
-		
+
 		if(!$matched){
 			$self->{error}="9";
 			$self->{errorString}="The variable begins with a # and is not a comment or meta variable.";
