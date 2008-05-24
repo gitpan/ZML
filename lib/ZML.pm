@@ -9,11 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.5.0
+Version 0.5.1
 
 =cut
 
-our $VERSION = '0.5.0';
+our $VERSION = '0.5.1';
 
 
 =head1 SYNOPSIS
@@ -83,14 +83,12 @@ sub addVar{
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
 	if(defined($legit)){
-
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
 		return undef;
 	}
 
-	$self->{var}{$var}=$value;	
-
+	$self->{var}{$var}=$value;
 	return 1;
 };
 
@@ -801,7 +799,7 @@ sub parse {
 	while(defined($rawdata[$rawdataInt])){
 		if($rawdata[$rawdataInt] =~ /^ /){
 			#this if statement prevents it from being ran on the first line if it is not properly formated
-			if(!defined($prevVar)){
+			if(defined($prevVar)){
 				chomp($rawdata[$rawdataInt]);
 				$rawdata[$rawdataInt]=~s/^ //;#remove the trailing space
 				#add in the line return and 
