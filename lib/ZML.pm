@@ -9,11 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.5.1
+Version 0.5.2
 
 =cut
 
-our $VERSION = '0.5.1';
+our $VERSION = '0.5.2';
 
 
 =head1 SYNOPSIS
@@ -194,7 +194,7 @@ sub addMeta{
 	return 1;
 };
 
-=head2 clearComment 
+=head2 clearComment
 
 This removes a meta variable. Two values are required.
 
@@ -202,7 +202,7 @@ The first is the variable name.
 
 	$ZMLobject->clearComment("some/variable");
 	
-=cut 
+=cut
 
 sub clearComment{
 	my $self=$_[0];
@@ -949,6 +949,12 @@ sub string{
 		while(defined($commentKeys[$commentKeysInt])){
 			my $commentVar=$commentKeys[$commentKeysInt];
 			my $data=$self->{comment}{$comment}{$commentVar};
+
+			#sets it to '' if it is not defined... this will prevent
+			#s/\n/\n /g from erroring
+			if (!defined($data)) {
+				$data='';
+			}
 			
 			#turns the data contained in the comment into a storable string
 			$data=~s/\n/\n /g ;
@@ -972,6 +978,12 @@ sub string{
 		while(defined($metaKeys[$metaKeysInt])){
 			my $metaVar=$metaKeys[$metaKeysInt];
 			my $data=$self->{comment}{$meta}{$metaVar};
+
+			#sets it to '' if it is not defined... this will prevent
+			#s/\n/\n /g from erroring
+			if (!defined($data)) {
+				$data='';
+			}
 			
 			#turns the data contained in the meta into a storable string
 			$data=~s/\n/\n /g ;
@@ -991,6 +1003,12 @@ sub string{
 		my $var=$keys[$keysInt];
 
 		my $data=$self->{var}{$var};
+
+		#sets it to '' if it is not defined... this will prevent
+		#s/\n/\n /g from erroring
+		if (!defined($data)) {
+			$data='';
+		}
 
 		#turns the data contained in the meta into a storable string
 		$data=~s/\n/\n /g ;

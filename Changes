@@ -1,5 +1,8 @@
 Revision history for ZML
 
+0.5.2	2009-02-17/14:30
+		-Undefined meta,comments, and vars are now handled properly.
+
 0.5.1	2008-05-24/16:15
 		-Fix the parse function's handling of multiline values.
 
