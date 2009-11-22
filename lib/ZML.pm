@@ -9,12 +9,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.5.2
+Version 0.5.3
 
 =cut
 
-our $VERSION = '0.5.2';
-
+our $VERSION = '0.5.3';
 
 =head1 SYNOPSIS
 
@@ -228,11 +227,11 @@ sub clearComment{
 
 This removes a meta. Two values are required.
 
-The first is the meta.
+This removes all meta values for a variable.
 
 	$ZMLobject->clearMeta("some/variable");
 	
-=cut 
+=cut
 
 sub clearMeta{
 	my $self=$_[0];
@@ -845,6 +844,7 @@ sub parse {
 			$matched=1;
 
 			#removes the ## from the beginning of the variable
+			my $oldkey=$keys[$keysInt];
 			$keys[$keysInt]=~s/^##//;
 
 			#check if the variable name is legit
@@ -856,7 +856,7 @@ sub parse {
 			}
 
 			#splits the comment
-			my @commentsplit=split(/=/, $zml{$keys[$keysInt]}, 2);
+			my @commentsplit=split(/=/, $zml{$oldkey}, 2);
 
 			#check if the comment variable name is legit
 			($legit, $errorString)=$self->varNameCheck($commentsplit[0]);
@@ -874,12 +874,13 @@ sub parse {
 			};
 		};
 
-		#if it does begin with a ## it is a comment
+		#if it does begin with a ## it is a meta
 		if($keys[$keysInt] =~ /^#!/){
 			#signify it has been matched
 			$matched=1;
 
 			#removes the ## from the beginning of the variable
+			my $oldkey=$keys[$keysInt];
 			$keys[$keysInt]=~s/^#!//;
 
 			#check if the variable name is legit
@@ -890,8 +891,8 @@ sub parse {
 				return undef;
 			}
 			
-						#splits the meta
-			my @metasplit=split(/=/, $zml{$keys[$keysInt]}, 2);
+			#splits the meta
+			my @metasplit=split(/=/, $zml{$oldkey}, 2);
 
 			#check if the comment variable name is legit
 			($legit, $errorString)=$self->varNameCheck($metasplit[0]);
@@ -977,7 +978,7 @@ sub string{
 		my $metaKeysInt=0;
 		while(defined($metaKeys[$metaKeysInt])){
 			my $metaVar=$metaKeys[$metaKeysInt];
-			my $data=$self->{comment}{$meta}{$metaVar};
+			my $data=$self->{meta}{$meta}{$metaVar};
 
 			#sets it to '' if it is not defined... this will prevent
 			#s/\n/\n /g from erroring
@@ -1220,6 +1221,11 @@ The second return is the string that describes the error.
 sub varNameCheck{
 	my ($self, $name) = @_;
 
+	#make sure it is defined
+	if (!defined($name)) {
+		return('10', 'No name defined');
+	}
+
 	#checks for ,
 	if($name =~ /,/){
 		return("0", "variavble name,'".$name."', contains ','");
@@ -1270,7 +1276,7 @@ sub varNameCheck{
 		return("9", "variavble name,'".$name."', matched /=/");
 	};
 
-	return(undef, ""); 
+	return(undef, "");
 };
 
 =head2 errorBlank 
