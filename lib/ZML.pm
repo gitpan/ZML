@@ -9,17 +9,15 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.5.3
+Version 0.5.4
 
 =cut
 
-our $VERSION = '0.5.3';
+our $VERSION = '0.5.4';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-The error handling is unified between all functions. If $object->{error} is
+The error handling is unified between all methods. If $object->{error} is
 ever defined after a function is ran there has been an error. A description
 of the error can be found in $object->{errorString}. The error string is
 always defined, but set to "" when there is no error. The error is blanked
@@ -35,7 +33,7 @@ after each run.
     };
     ...
 
-=head1 FUNCTIONS
+=head1 METHODS
 
 =head2 new
 
@@ -792,132 +790,123 @@ sub parse {
 	#blanks any errors
 	$self->errorBlank;
 
-	my $rawdataInt=0;
+	my $rdInt=0;
 	my $prevVar=undef;
-	#performs the initial parsing
-	while(defined($rawdata[$rawdataInt])){
-		if($rawdata[$rawdataInt] =~ /^ /){
-			#this if statement prevents it from being ran on the first line if it is not properly formated
-			if(defined($prevVar)){
-				chomp($rawdata[$rawdataInt]);
-				$rawdata[$rawdataInt]=~s/^ //;#remove the trailing space
-				#add in the line return and 
-				$zml{$prevVar}=$zml{$prevVar}."\n".$rawdata[$rawdataInt];
-			};
-		}else{
-			#split it into two
-			my @linesplit=split(/=/, $rawdata[$rawdataInt], 2);
-			chomp($linesplit[1]);
-			$zml{$linesplit[0]}=$linesplit[1];
-			$prevVar=$linesplit[0];#this is used if the next line is a continuation from the previous
-		};
+	my $prevVar2=undef;
+	my $prevVar2type=undef;
+	while (defined($rawdata[$rdInt])) {
 
-		$rawdataInt++;
-	};
+		#handles it if it is a prevarious variable
+		if ($rawdata[$rdInt] =~ /^\ /) {
+			#clean it up
+			chomp($rawdata[$rdInt]);
+			$rawdata[$rdInt]=~s/^\ //;
 
-	#breaks it down
-	my @keys=keys(%zml);
-	my $keysInt=0;
-	while(defined($keys[$keysInt])){
-		#used for checking if it a match has been found
-		my $matched=undef;
-
-		#if it does not begin with a # it is a variable
-		if(!($keys[$keysInt] =~ /^#/)){
-			#signify it has been matched
-			$matched=1;
-
-			#check if the variable name is legit
-			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(defined($legit)){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
+			#ignore it if there is no previous variable
+			if (defined($prevVar)) {
+				if (defined($prevVar2)) {
+					$self->{$prevVar2type}{$prevVar}{$prevVar2}=
+                        $self->{$prevVar2type}{$prevVar}{$prevVar2}."\n".$rawdata[$rdInt];
+				}else {
+					$self->{var}{$prevVar}=$self->{var}{$prevVar}."\n".$rawdata[$rdInt];
+				}
 			}
 
-			$self->{var}{$keys[$keysInt]}=$zml{$keys[$keysInt]};
-		};
-
-		#if it does begin with a ## it is a comment
-		if($keys[$keysInt] =~ /^##/){
-			#signify it has been matched
-			$matched=1;
-
-			#removes the ## from the beginning of the variable
-			my $oldkey=$keys[$keysInt];
-			$keys[$keysInt]=~s/^##//;
-
-			#check if the variable name is legit
-			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(defined($legit)){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
-
-			#splits the comment
-			my @commentsplit=split(/=/, $zml{$oldkey}, 2);
-
-			#check if the comment variable name is legit
-			($legit, $errorString)=$self->varNameCheck($commentsplit[0]);
-			if(defined($legit)){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
-			}
+		}else {
 			
-			if(defined($self->{comment}{$keys[$keysInt]})){
-				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
-			}else{
-				$self->{comment}{$keys[$keysInt]}={};
-				$self->{comment}{$keys[$keysInt]}{$commentsplit[0]}=$commentsplit[1];
-			};
-		};
+			my @split1=split(/\=/, $rawdata[$rdInt], 2);
 
-		#if it does begin with a ## it is a meta
-		if($keys[$keysInt] =~ /^#!/){
-			#signify it has been matched
-			$matched=1;
+			#handles it for a regular variable
+			if (!($split1[0] =~ /^\#/)) {
+				$prevVar=$split1[0];
+				$prevVar2=undef;
+				$prevVar2type=undef;
 
-			#removes the ## from the beginning of the variable
-			my $oldkey=$keys[$keysInt];
-			$keys[$keysInt]=~s/^#!//;
+				#check if the variable name is legit
+				my ($legit, $errorString)=$self->varNameCheck($prevVar);
+				if(defined($legit)){
+					$self->{error}=$legit;
+					$self->{errorString}=$errorString;
+					return undef;
+				}
 
-			#check if the variable name is legit
-			my ($legit, $errorString)=$self->varNameCheck($keys[$keysInt]);
-			if(defined($legit)){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
+				chomp($split1[1]);
+
+				$self->{var}{$prevVar}=$split1[1];
 			}
-			
-			#splits the meta
-			my @metasplit=split(/=/, $zml{$oldkey}, 2);
 
-			#check if the comment variable name is legit
-			($legit, $errorString)=$self->varNameCheck($metasplit[0]);
-			if(defined($legit)){
-				$self->{error}=$legit;
-				$self->{errorString}=$errorString;
-				return undef;
+			#handles a comment
+			if ($split1[0] =~ /^##/){
+				$prevVar=$split1[0];
+				$prevVar=~s/^\#\#//;
+				$prevVar2type='comment';
+
+				my @split2=split(/\=/, $split1[1], 2);
+				
+				$prevVar2=$split2[0];
+
+				#check if the variable name is legit
+				my ($legit, $errorString)=$self->varNameCheck($prevVar);
+				if(defined($legit)){
+					$self->{error}=$legit;
+					$self->{errorString}=$errorString;
+					return undef;
+				}
+ 				#check if the comment name is legit
+				($legit, $errorString)=$self->varNameCheck($prevVar2);
+				if(defined($legit)){
+					$self->{error}=$legit;
+					$self->{errorString}=$errorString;
+					return undef;
+				}
+				
+				chomp($split2[1]);
+
+				if (!defined($self->{$prevVar2type}{$prevVar})) {
+					$self->{$prevVar2type}{$prevVar}={};
+				}
+
+				$self->{$prevVar2type}{$prevVar}{$prevVar2}=$split2[1];
 			}
-			
-			if(defined($self->{meta}{$keys[$keysInt]})){
-				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
-			}else{
-				$self->{meta}{$keys[$keysInt]}={};
-				$self->{meta}{$keys[$keysInt]}{$metasplit[0]}=$metasplit[1];
-			};
-		};
 
-		if(!$matched){
-			$self->{error}="9";
-			$self->{errorString}="The variable begins with a # and is not a comment or meta variable.";
-			return undef;
-		};
+			#handles a comment
+			if ($split1[0] =~ /^#!/){
+				$prevVar=$split1[0];
+				$prevVar=~s/^\#\!//;
+				$prevVar2type='meta';
 
-		$keysInt++;
-	};
+				my @split2=split(/\=/, $split1[1], 2);
+				
+				$prevVar2=$split2[0];
+				
+				#check if the variable name is legit
+				my ($legit, $errorString)=$self->varNameCheck($prevVar);
+				if(defined($legit)){
+					$self->{error}=$legit;
+					$self->{errorString}=$errorString;
+					return undef;
+				}
+ 				#check if the meta name is legit
+				($legit, $errorString)=$self->varNameCheck($prevVar2);
+				if(defined($legit)){
+					$self->{error}=$legit;
+					$self->{errorString}=$errorString;
+					return undef;
+				}
+
+				chomp($split2[1]);
+
+				if (!defined($self->{$prevVar2type}{$prevVar})) {
+					$self->{$prevVar2type}{$prevVar}={};
+				}
+
+				$self->{$prevVar2type}{$prevVar}{$prevVar2}=$split2[1];
+			}
+
+		}
+
+		$rdInt++;
+	}
 
 	return 1;
 };
