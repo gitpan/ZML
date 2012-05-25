@@ -1,5 +1,13 @@
 Revision history for ZML
 
+1.0.0	 2012-05-24/17:00
+		 -Error code '0' became 11. This makes it Error::Helper friendy.
+		 -Now uses Error::Helper.
+		 -varNameCheck now returns a boolean for the legit value.
+		 -Lots of fixes.
+		 -Update my last name post marriages.
+		 
+
 0.5.4	2009-11-22/9:30
 		-Clean up the parser so it now properly parses meta
 			variables and comments. Also neater is design.

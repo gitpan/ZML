@@ -2,6 +2,7 @@ package ZML;
 
 use warnings;
 use strict;
+use base 'Error::Helper';
 
 =head1 NAME
 
@@ -9,11 +10,11 @@ ZML - A simple, fast, and easy to read binary data storage format.
 
 =head1 VERSION
 
-Version 0.5.4
+Version 1.0.0
 
 =cut
 
-our $VERSION = '0.5.4';
+our $VERSION = '1.0.0';
 
 =head1 SYNOPSIS
 
@@ -27,7 +28,7 @@ after each run.
 
     my $zml = ZML->new();
     my $zmlstring="a=0\nb=1\n 2\n";
-    if (defined($zml->{error})){
+    if ($zml->error){
     	print "Parsing the string failed with a error, ".$zml->{error}.
     			", ".$zml->{errorString}."\n";
     };
@@ -39,12 +40,11 @@ after each run.
 
 Creates a new ZML object.
 
-	my $ZMLobject=$ZML->new();
+	my $ZMLobject=$ZML->new;
 
 =cut
 
 sub new {
-	
 	my $self = {var=>{}, meta=>{}, comment=>{}, error=>undef, errorString=>""};
 
 	bless $self;
@@ -68,20 +68,21 @@ sub addVar{
 	my $var=$_[1];
 	my $value=$_[2];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	if(!defined($var)){
-		$self->{error}=$10;
+		$self->{error}=10;
 		$self->{errorString}="ZML addVar:10: Variable is not defined.";
-		warn("ZML addVar:10: Variable is not defined.");
+		$self->warn;
 		return undef;
 	};
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(defined($legit)){
+	if( $legit ){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -109,21 +110,23 @@ sub addComment{
 	my $comment=$_[2];
 	my $value=$_[3];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -160,21 +163,23 @@ sub addMeta{
 	my $meta=$_[2];
 	my $value=$_[3];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -205,14 +210,14 @@ sub clearComment{
 	my $self=$_[0];
 	my $var=$_[1];
 
-
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 
@@ -235,14 +240,14 @@ sub clearMeta{
 	my $self=$_[0];
 	my $var=$_[1];
 
-
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 
@@ -264,13 +269,14 @@ sub delVar{
 	my $self=$_[0];
 	my $var=$_[1];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($legit)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -296,21 +302,23 @@ sub delMeta{
 	my $var=$_[1];
 	my $meta=$_[2];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -336,28 +344,30 @@ sub delComment{
 	my $var=$_[1];
 	my $comment=$_[2];
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 
 	#check if the variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
 	delete($self->{comment}{$var}{$comment});
 
 	return 1;
-};
+}
 
 =head2 getVar
 
@@ -370,24 +380,26 @@ Gets a value of a variable.
 sub getVar {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
-	};	
+	}
 	
 	if(!defined($self->{var}{$var})){
 		$self->{error}="10";
 		$self->{errorString}="Variable '".$var."' is undefined,";
+		$self->warn;
 		return undef;		
-	};
+	}
 	
 	return $self->{var}{$var};
-};
+}
 
 =head2 getMeta
 
@@ -400,33 +412,37 @@ Gets a value for a meta variable.
 sub getMeta {
 	my ($self, $var, $meta) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};	
 
 	#check if the meta variable name is legit
 	($legit, $errorString)=$self->varNameCheck($meta);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 	
 	if(!defined($self->{meta}{$var})){
 		$self->{error}="10";
 		$self->{errorString}="Variable '".$var."' is undefined,";
+		$self->warn;
 		return undef;		
 	};
 
 	if(!defined($self->{meta}{$var}{$meta})){
 		$self->{error}="10";
 		$self->{errorString}="Variable '".$var."' is undefined,";
+		$self->warn;
 		return undef;		
 	};
 	
@@ -444,40 +460,44 @@ Gets the value for a comment
 sub getComment {
 	my ($self, $var, $comment) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};	
 
 	#check if the meta variable name is legit
 	($legit, $errorString)=$self->varNameCheck($comment);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	};
 	
 	if(!defined($self->{comment}{$var})){
 		$self->{error}="10";
 		$self->{errorString}="Variable '".$var."' is undefined,";
+		$self->warn;
 		return undef;		
 	};
 
 	if(!defined($self->{comment}{$var}{$comment})){
 		$self->{error}="10";
 		$self->{errorString}="Variable '".$var."' is undefined,";
-		return undef;		
+		$self->warn;
+		return undef;
 	};
 	
 	return $self->{comment}{$var}{$comment};
 };
 
-=head2 keysVar 
+=head2 keysVar
 
 This gets a array containing the names of the variables.
 
@@ -488,7 +508,7 @@ This gets a array containing the names of the variables.
 sub keysVar {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	my @keys=keys(%{$self->{var}});
 
@@ -497,7 +517,7 @@ sub keysVar {
 
 =head2 keysMeta
 
-This gets a list of metas.
+This gets a list of variables with metas.
 
 	my @variables=$zml->keysMeta();
 
@@ -506,7 +526,7 @@ This gets a list of metas.
 sub keysMeta {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	my @keys=keys(%{$self->{meta}});
 
@@ -524,7 +544,7 @@ This gets a list of comments.
 sub keysComment {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	my @keys=keys(%{$self->{comment}});
 
@@ -543,13 +563,14 @@ of the meta to get the meta variables for.
 sub keysMetaVar {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
@@ -570,20 +591,21 @@ the variable to get the comments for.
 sub keysCommentVar {
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#check if the variable name is legit
 	my ($legit, $errorString)=$self->varNameCheck($var);
-	if(!defined($var)){
+	if($legit){
 		$self->{error}=$legit;
 		$self->{errorString}=$errorString;
+		$self->warn;
 		return undef;
 	}
 
-	my @keys=keys(%{$self->{meta}{$var}});
+	my @keys=keys(%{$self->{comment}{$var}});
 
 	return @keys;
-};
+}
 
 =head2 keyRegexDelComment
 
@@ -638,26 +660,26 @@ sub keyRegexDelComment{
 					}else{
 						#adds it if it has not been added yet
 						push(@{$removed{$ckeys[$ckeysInt]}}, $vkeys[$vkeysInt]);
-					};
+					}
 
 		 			delete($self->{comment}{$ckeys[$ckeysInt]}{$vkeys[$vkeysInt]});
-				};
+				}
 
 				#checks all the meta variables have been removes it if it matched
 				@vkeys=keys(%{$self->{comment}{$ckeys[$ckeysInt]}});
 				if(defined($vkeys[0])){
 					delete($self->{comment}{$ckeys[$ckeysInt]});
-				};
+				}
 
 				$vkeysInt++;
-			};
-		};
+			}
+		}
 
 		$ckeysInt++;
-	};
+	}
 
 	return %removed;
-};
+}
 
 =head2 keyRegexDelMeta
 
@@ -765,13 +787,13 @@ sub keyRegexDelVar{
 			
 			#removes the variable
 			delete($self->{var}{$keys[$keysInt]});
-		};
+		}
 		
 		$keysInt++;
-	};
+	}
 	
 	return @removed;
-};
+}
 
 =head2 parse
 
@@ -782,13 +804,14 @@ string that contains the data.
 
 sub parse {
 	my ($self, $zmlstring)= @_;
-	my %zml=();
+
+	#blanks any errors
+	$self->errorblank;
+
+	my %zml;
 	
 	#breaks down the zblstring per line
 	my @rawdata=split(/\n/, $zmlstring);
-
-	#blanks any errors
-	$self->errorBlank;
 
 	my $rdInt=0;
 	my $prevVar=undef;
@@ -824,9 +847,10 @@ sub parse {
 
 				#check if the variable name is legit
 				my ($legit, $errorString)=$self->varNameCheck($prevVar);
-				if(defined($legit)){
+				if($legit){
 					$self->{error}=$legit;
 					$self->{errorString}=$errorString;
+					$self->warn;
 					return undef;
 				}
 
@@ -847,14 +871,14 @@ sub parse {
 
 				#check if the variable name is legit
 				my ($legit, $errorString)=$self->varNameCheck($prevVar);
-				if(defined($legit)){
+				if($legit){
 					$self->{error}=$legit;
 					$self->{errorString}=$errorString;
 					return undef;
 				}
  				#check if the comment name is legit
 				($legit, $errorString)=$self->varNameCheck($prevVar2);
-				if(defined($legit)){
+				if($legit){
 					$self->{error}=$legit;
 					$self->{errorString}=$errorString;
 					return undef;
@@ -881,14 +905,14 @@ sub parse {
 				
 				#check if the variable name is legit
 				my ($legit, $errorString)=$self->varNameCheck($prevVar);
-				if(defined($legit)){
+				if($legit){
 					$self->{error}=$legit;
 					$self->{errorString}=$errorString;
 					return undef;
 				}
  				#check if the meta name is legit
 				($legit, $errorString)=$self->varNameCheck($prevVar2);
-				if(defined($legit)){
+				if($legit){
 					$self->{error}=$legit;
 					$self->{errorString}=$errorString;
 					return undef;
@@ -915,14 +939,14 @@ sub parse {
 
 This function creates a string out of a the object.
 
-	my $string=$zml->string();
+	my $string=$zml->string;
 
 =cut
 
 sub string{
 	my ($self, $var) = @_;
 
-	$self->errorBlank;
+	$self->errorblank;
 
 	#used to store the generated string
 	my $string="";
@@ -933,7 +957,7 @@ sub string{
 	while(defined($keys[$keysInt])){
 		my $comment=$keys[$keysInt];
 		
-		#builds string for
+		#builds string for comments
 		my @commentKeys=keys(%{$self->{comment}{$comment}});
 		my $commentKeysInt=0;
 		while(defined($commentKeys[$commentKeysInt])){
@@ -1043,13 +1067,13 @@ sub valRegexDelComment{
 	
 	#contains the removed variables
 	my %removed;
-	
+
 	#get a list of variables
-	my @keys=keys(%{$self->{mar}});
-	
+	my @keys=keys(%{$self->{var}});
+
 	my $keysInt=0;
 	while(defined($keys[$keysInt])){
-		my @keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		my @keys2=keys(%{$self->{var}{$keys[$keysInt]}});
 		my $keys2Int=0;
 		while(defined($keys2[$keys2Int])){
 			#tests if the value equals the regexp
@@ -1061,25 +1085,25 @@ sub valRegexDelComment{
 				}else{
 					#adds it if it has not been added yet
 					push(@{$removed{$keys[$keysInt]}}, $keys2[$keys2Int]);
-				};
+				}
 
-				delete($self->{meta}{$keys[$keysInt]}{$keys2[$keys2Int]});
-			};
+				delete($self->{var}{$keys[$keysInt]}{$keys2[$keys2Int]});
+			}
 
 			$keys2Int++;
-		};
+		}
 
 		#checks all the meta variables have been removes it if it matched
-		@keys2=keys(%{$self->{meta}{$keys[$keysInt]}});
+		@keys2=keys(%{$self->{var}{$keys[$keysInt]}});
 		if(defined($keys2[0])){
-			delete($self->{meta}{$keys[$keysInt]});
-		};
+			delete($self->{var}{$keys[$keysInt]});
+		}
 		
 		$keysInt++;
-	};
+	}
 	
 	return %removed;
-};
+}
 
 
 =head2 valRegexDelMeta
@@ -1116,7 +1140,7 @@ sub valRegexDelMeta{
 	my %removed;
 	
 	#get a list of variables
-	my @keys=keys(%{$self->{mar}});
+	my @keys=keys(%{$self->{meta}});
 	
 	my $keysInt=0;
 	while(defined($keys[$keysInt])){
@@ -1198,7 +1222,7 @@ one variable, which the name of the variable. It returns two
 values.
 
 The first is a integer which represents the of the error. If
-it is undefined, there is no error.
+it is false, there is no error.
 
 The second return is the string that describes the error.
 
@@ -1217,7 +1241,7 @@ sub varNameCheck{
 
 	#checks for ,
 	if($name =~ /,/){
-		return("0", "variavble name,'".$name."', contains ','");
+		return("11", "variavble name,'".$name."', contains ','");
 	};
 		
 	#checks for /.
@@ -1265,25 +1289,8 @@ sub varNameCheck{
 		return("9", "variavble name,'".$name."', matched /=/");
 	};
 
-	return(undef, "");
+	return('0', "");
 };
-
-=head2 errorBlank 
-
-This is a internal function and should not be called.
-
-=cut
-
-#blanks the error flags
-sub errorBlank{
-	my $self=$_[0];
-
-	$self->{error}=undef;
-	$self->{errorString}="";
-
-	return 1;
-};
-
 
 =head1 ZML FORMAT
 
@@ -1339,11 +1346,10 @@ A variable name is considered non-legit if it matches any of the following regex
 	/\n/
 	/=/
 
-=head1 ERROR CODES
+=head1 ERROR HANDLING/CODES
 
-=head2 0
-
-This means the variable name matches /,/.
+This module uses L<Error::Helper> for error handling. Below are the
+error codes returned by the error method.
 
 =head2 1
 
@@ -1385,11 +1391,15 @@ The variable name matches /=/.
 
 Undefined variable.
 
+=head2 11
+
+This means the variable name matches /,/.
+
 =cut
 
 =head1 AUTHOR
 
-Zane C. Bowers, C<< <vvelox at vvelox.net> >>
+Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>
 
 =head1 BUGS
 
@@ -1428,7 +1438,7 @@ L<http://search.cpan.org/dist/ZML>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 Zane C. Bowers, all rights reserved.
+Copyright 2012 Zane C. Bowers-Hadley, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
